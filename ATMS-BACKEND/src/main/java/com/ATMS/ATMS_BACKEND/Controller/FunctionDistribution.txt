@@ -1,0 +1,55 @@
+//    ADMIN WILL DO CRUD FOR CLG,DEPT,STUD,PROF
+
+//    CLG
+//    addCollege()
+//    getAllColleges()
+//    getCollegeById()
+//    updateCollege()
+//    deleteCollege()
+//
+//     DEPT
+//    addDepartment()
+//    getAllDepartments()
+//    getDepartmentById()
+//    updateDepartment()
+//    deleteDepartment()
+//
+//     PROF
+//    addProfessor()
+//    getAllProfessors()
+//    getProfessorById()
+//    updateProfessor()
+//    deleteProfessor()
+//
+//     STUD
+//    addStudent()
+//    getAllStudents()
+//    getStudentById()
+//    updateStudent()
+//    deleteStudent()
+//
+//     SUBJ
+//    addSubject()
+//    getAllSubjects()
+//    getSubjectById()
+//    updateSubject()
+//    deleteSubject()
+
+//    Prof will do the Lec & attendance part
+//    Lecture
+//    createLecture()
+//    getAllLectures()
+//    getLectureById()
+//    updateLecture()
+//    deleteLecture()
+//
+//    Student
+//    getStudentsByClass()
+//
+//    Attendance
+//    markAttendance()
+//    updateAttendance()
+//    getAttendanceByLecture()
+//    getAttendanceByStudent()
+//    getAttendanceBySubject()
+//    getStudentAttendancePercentage()
