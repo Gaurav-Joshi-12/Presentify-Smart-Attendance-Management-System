@@ -22,6 +22,8 @@ function Landing() {
   useEffect(() => {
     if (role === "ADMIN") navigate({ to: "/admin-dashboard" });
     else if (role === "PROFESSOR") navigate({ to: "/subjects" });
+    else if (role === "STUDENT") navigate({ to: "/student-dashboard" });
+    else navigate({ to: "/login" });
   }, [role, navigate]);
 
   return (

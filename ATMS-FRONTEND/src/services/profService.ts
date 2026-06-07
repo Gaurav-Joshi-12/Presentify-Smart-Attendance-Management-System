@@ -13,6 +13,8 @@ export const profService = {
   // Lecture
   createLecture: (data: LectureDto) =>
     api.post<{ body: string; lectureId: string }>("/api/prof/lecture", data).then((r) => r.data),
+  listAllLectures: () =>
+    api.get<LectureDto[]>("/api/prof/lecture").then((r) => r.data),
   listLecturesBySubject: (subjectId: number) =>
     api
       .get<LectureDto[]>("/api/prof/lecture")
@@ -41,8 +43,11 @@ export const profService = {
       .get<AttendanceDto[]>(`/api/prof/attendance/lecture/${lectureId}`)
       .then((r) => r.data),
 
-  studentPercentage: (studentId: number) =>
+  studentPercentage: (studentId: number, subjectId?: number) =>
     api
-      .get<{ attendancePercentage: string }>(`/api/prof/attendance/percentage/${studentId}`)
+      .get<{ attendancePercentage: string }>(
+        `/api/prof/attendance/percentage/${studentId}`,
+        { params: subjectId ? { subjectId } : undefined }
+      )
       .then((r) => Number(r.data.attendancePercentage)),
 };

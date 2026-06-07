@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,5 +26,8 @@ public class AttendanceDto {
 
     // Which student's attendance is being marked
     private Long studentId;
+
+    // Timestamp when attendance was marked
+    private LocalDateTime markedAt;
 
 }

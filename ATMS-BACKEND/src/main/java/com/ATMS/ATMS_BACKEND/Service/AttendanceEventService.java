@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AttendanceEventService {
@@ -59,19 +60,62 @@ public class AttendanceEventService {
 
 
 
-        Attendance attendance = new Attendance();
+        List<Attendance> existingAttendanceList =
+                attendanceRepository
+                        .findByLectureAndStudent(
+                                lecture, student);
 
-        attendance.setAttendanceStatus(
-                attendanceDto.getAttendanceStatus());
 
-        attendance.setRemarks(
-                attendanceDto.getRemarks());
-        attendance.setMarkedAt(
-                LocalDateTime.now());
 
-        attendance.setLecture(lecture);
-        attendance.setStudent(student);
+        Attendance attendance;
+
+
+
+        if (!existingAttendanceList.isEmpty()) {
+
+            if (attendanceDto.getRemarks() != null
+                    && attendanceDto.getRemarks()
+                    .startsWith("Attendance Marked with QR")
+                    && existingAttendanceList.get(0).getAttendanceStatus()
+                    == attendanceDto.getAttendanceStatus()) {
+
+                throw new Exception(
+                        "Attendance has already been marked for this lecture.");
+            }
+
+            attendance = existingAttendanceList.get(0);
+
+            attendance.setAttendanceStatus(
+                    attendanceDto.getAttendanceStatus());
+
+            attendance.setRemarks(
+                    attendanceDto.getRemarks());
+
+            attendance.setMarkedAt(
+                    LocalDateTime.now());
+
+        } else {
+
+            attendance = new Attendance();
+
+            attendance.setAttendanceStatus(
+                    attendanceDto.getAttendanceStatus());
+
+            attendance.setRemarks(
+                    attendanceDto.getRemarks());
+
+            attendance.setMarkedAt(
+                    LocalDateTime.now());
+
+            attendance.setLecture(lecture);
+            attendance.setStudent(student);
+        }
+
+
+
         attendanceRepository.save(attendance);
+
+
 //        whatsappService.sendWhatsappMessage("7666032435");
         AttendanceEvent attendanceEvent = new AttendanceEvent();
         attendanceEvent.setAttendanceStatus(attendance.getAttendanceStatus());
@@ -161,7 +205,8 @@ public class AttendanceEventService {
                     attendance.getStudent()
                             .getStudentId());
 
-
+            attendanceDto.setMarkedAt(
+                    attendance.getMarkedAt());
 
             attendanceDtoList.add(attendanceDto);
         }
@@ -213,7 +258,8 @@ public class AttendanceEventService {
                     attendance.getStudent()
                             .getStudentId());
 
-
+            attendanceDto.setMarkedAt(
+                    attendance.getMarkedAt());
 
             attendanceDtoList.add(attendanceDto);
         }
@@ -258,7 +304,8 @@ public class AttendanceEventService {
                     attendance.getStudent()
                             .getStudentId());
 
-
+            attendanceDto.setMarkedAt(
+                    attendance.getMarkedAt());
 
             attendanceDtoList.add(attendanceDto);
         }
@@ -283,6 +330,60 @@ public class AttendanceEventService {
         List<Attendance> attendanceList =
                 attendanceRepository
                         .findByStudent(student);
+
+
+
+        int totalLectures =
+                attendanceList.size();
+
+
+
+        int presentCount = 0;
+
+
+
+        for(Attendance attendance : attendanceList){
+
+            if(attendance.getAttendanceStatus()
+                    == AttendanceStatus.PRESENT){
+
+                presentCount++;
+            }
+        }
+
+
+
+        if(totalLectures == 0){
+
+            return 0.0;
+        }
+
+
+
+        return ((double) presentCount
+                / totalLectures) * 100;
+    }
+
+
+
+    // GET ATTENDANCE PERCENTAGE BY SUBJECT
+    public Double
+    getStudentAttendancePercentageBySubject(
+            Long studentId,
+            Long subjectId)
+            throws Exception {
+
+        Student student = studentRepository
+                .findByStudentIdAndActiveTrue(studentId)
+                .orElseThrow(() ->
+                        new Exception("Student Not Found"));
+
+
+
+        List<Attendance> attendanceList =
+                attendanceRepository
+                        .findByStudentAndLectureSubjectSubjectId(
+                                student, subjectId);
 
 
 

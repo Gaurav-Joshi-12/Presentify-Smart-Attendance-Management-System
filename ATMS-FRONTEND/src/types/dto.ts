@@ -82,6 +82,7 @@ export interface AttendanceDto {
   remarks: string;
   lectureId: number;
   studentId: number;
+  markedAt?: string;
 }
 
 export interface ProfessorSession {

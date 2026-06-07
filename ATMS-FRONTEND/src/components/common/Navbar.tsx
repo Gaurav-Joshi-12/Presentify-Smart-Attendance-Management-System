@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import Button from "./Button";
 
 export default function Navbar() {
-  const { role, professor, adminUsername, logout } = useAuth();
+  const { role, professor, student, adminUsername, logout } = useAuth();
   const navigate = useNavigate();
 
   const onLogout = () => {
@@ -32,6 +32,13 @@ export default function Navbar() {
             <>
               <NavItem to="/subjects" label="Subjects" />
               <NavItem to="/reports" label="Reports" />
+              <NavItem to="/qrcode-generator" label="QR Generator" />
+            </>
+          )}
+          {role === "STUDENT" && (
+            <>
+              <NavItem to="/student-dashboard" label="Dashboard" />
+              <NavItem to="/student-scan" label="Scan QR" />
             </>
           )}
           {role === "ADMIN" && <NavItem to="/admin-dashboard" label="Control Hub" />}
@@ -48,9 +55,11 @@ export default function Navbar() {
               <span className="text-xs font-medium">
                 {role === "ADMIN"
                   ? adminUsername || "Admin"
-                  : professor
+                  : role === "PROFESSOR" && professor
                   ? `${professor.firstName} ${professor.lastName}`
-                  : "Professor"}
+                  : role === "STUDENT" && student
+                  ? `${student.firstName} ${student.lastName}`
+                  : "User"}
               </span>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 {role}

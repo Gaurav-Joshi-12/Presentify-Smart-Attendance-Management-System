@@ -24,7 +24,8 @@ function Reports() {
   const [lectures, setLectures] = useState<LectureDto[]>([]);
   const [students, setStudents] = useState<StudentDto[]>([]);
   const [records, setRecords] = useState<AttendanceDto[]>([]);
-  const [percentages, setPercentages] = useState<Record<number, number>>({});
+  const [subjectPercentages, setSubjectPercentages] = useState<Record<number, number>>({});
+  const [overallPercentages, setOverallPercentages] = useState<Record<number, number>>({});
   const [subjectId, setSubjectId] = useState<string>("");
   const [lectureId, setLectureId] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -80,12 +81,17 @@ function Reports() {
       setRecords(recs);
       setStudents(st);
 
-      // fetch percentages for each student
+      // fetch subject percentages for each student
+      Promise.all(st.map((s) =>
+        profService.studentPercentage(s.studentId!, Number(subjectId)).then((p) => [s.studentId!, p] as const).catch(() => [s.studentId!, 0] as const)
+      )).then((pairs) => setSubjectPercentages(Object.fromEntries(pairs)));
+
+      // fetch overall percentages for each student
       Promise.all(st.map((s) =>
         profService.studentPercentage(s.studentId!).then((p) => [s.studentId!, p] as const).catch(() => [s.studentId!, 0] as const)
-      )).then((pairs) => setPercentages(Object.fromEntries(pairs)));
+      )).then((pairs) => setOverallPercentages(Object.fromEntries(pairs)));
     }).finally(() => setLoading(false));
-  }, [lectureId, lectures, professor]);
+  }, [lectureId, lectures, professor, subjectId]);
 
   const classPct = useMemo(() => {
     if (records.length === 0) return 0;
@@ -94,7 +100,7 @@ function Reports() {
   }, [records]);
 
   const flagged = useMemo(() =>
-    students.filter((s) => (percentages[s.studentId!] ?? 0) < 75), [students, percentages]);
+    students.filter((s) => (subjectPercentages[s.studentId!] ?? 0) < 75), [students, subjectPercentages]);
 
   return (
     <div className="min-h-screen pb-16">
@@ -137,8 +143,8 @@ function Reports() {
         </Card>
 
         <Card
-          title="Student percentages"
-          subtitle="Students below 75% are flagged"
+          title="Subject Attendance"
+          subtitle="Students below 75% in this subject are flagged"
           actions={flagged.length > 0 && (
             <div className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-full badge-danger-glow">
               <AlertTriangle className="h-3.5 w-3.5" /> {flagged.length} at risk
@@ -149,7 +155,20 @@ function Reports() {
             <div className="py-10 text-center text-sm text-muted-foreground">No students.</div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {students.map((s) => <PctTile key={s.studentId} student={s} pct={percentages[s.studentId!] ?? 0} />)}
+              {students.map((s) => <PctTile key={s.studentId} student={s} pct={subjectPercentages[s.studentId!] ?? 0} />)}
+            </div>
+          )}
+        </Card>
+
+        <Card
+          title="Overall Attendance"
+          subtitle="Cumulative attendance across all subjects"
+        >
+          {students.length === 0 ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">No students.</div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {students.map((s) => <PctTile key={s.studentId} student={s} pct={overallPercentages[s.studentId!] ?? 0} />)}
             </div>
           )}
         </Card>

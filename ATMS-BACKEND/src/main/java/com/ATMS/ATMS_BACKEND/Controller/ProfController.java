@@ -308,13 +308,24 @@ public class ProfController {
     // GET ATTENDANCE PERCENTAGE
     @GetMapping("/attendance/percentage/{id}")
     public ResponseEntity<?> getAttendancePercentage(
-            @PathVariable(name = "id") Long id){
+            @PathVariable(name = "id") Long id,
+            @RequestParam(name = "subjectId", required = false) Long subjectId){
 
         try{
 
-            Double percentage =
-                    attendanceService
-                            .getStudentAttendancePercentage(id);
+            Double percentage;
+
+            if (subjectId != null) {
+
+                percentage = attendanceService
+                        .getStudentAttendancePercentageBySubject(
+                                id, subjectId);
+
+            } else {
+
+                percentage = attendanceService
+                        .getStudentAttendancePercentage(id);
+            }
 
             return ResponseEntity.ok(
                     Map.of("attendancePercentage",

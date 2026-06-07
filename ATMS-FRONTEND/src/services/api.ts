@@ -15,6 +15,7 @@ api.interceptors.response.use(
   (err) => {
     // Normalize error messages
     const msg =
+      err?.response?.data?.body ||
       err?.response?.data?.message ||
       err?.response?.data?.error ||
       err?.message ||

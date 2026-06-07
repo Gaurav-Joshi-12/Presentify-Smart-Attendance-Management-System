@@ -16,11 +16,11 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
-type Tab = "ADMIN" | "PROFESSOR";
+type Tab = "ADMIN" | "PROFESSOR" | "STUDENT";
 
 function Login() {
   const [tab, setTab] = useState<Tab>("ADMIN");
-  const { loginAdmin, loginProfessor } = useAuth();
+  const { loginAdmin, loginProfessor, loginStudent } = useAuth();
   const navigate = useNavigate();
 
   // Admin form
@@ -36,8 +36,14 @@ function Login() {
   const [pErr, setPErr] = useState<string | null>(null);
   const [loadingColleges, setLoadingColleges] = useState(false);
 
+  // Student form
+  const [sEmail, setSEmail] = useState("");
+  const [sPass, setSPass] = useState("");
+  const [sErr, setSErr] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
   useEffect(() => {
-    if (tab !== "PROFESSOR") return;
+    if (tab === "ADMIN") return;
     setLoadingColleges(true);
     adminService
       .listColleges()
@@ -69,14 +75,14 @@ function Login() {
 
   const onProf = (e: FormEvent) => {
     e.preventDefault();
-    
+    setSubmitting(true);
     adminService
       .listProfessors()
       .then((profs) => {
         const found = profs.find(
           (p) =>
             p.email.toLowerCase() === pEmail.toLowerCase() &&
-            (p.password === pPass || pPass === "professor")
+            p.password === pPass
         );
         
         if (found) {
@@ -91,12 +97,39 @@ function Login() {
           toast.success(`Welcome, Prof. ${found.lastName}`);
           navigate({ to: "/subjects" });
         } else {
-          setPErr("Invalid credentials. Check your email, college selection, or password.");
+          setPErr("Invalid credentials. Check your email or password.");
         }
       })
       .catch((err) => {
         setPErr("Failed to connect to auth server: " + err.message);
-      });
+      })
+      .finally(() => setSubmitting(false));
+  };
+
+  const onStudent = (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    adminService
+      .listStudents()
+      .then((students) => {
+        const found = students.find(
+          (s) =>
+            s.email.toLowerCase() === sEmail.toLowerCase() &&
+            s.password === sPass
+        );
+
+        if (found) {
+          loginStudent(found);
+          toast.success(`Welcome, ${found.firstName} ${found.lastName}`);
+          navigate({ to: "/student-dashboard" });
+        } else {
+          setSErr("Invalid credentials. Check your email or password.");
+        }
+      })
+      .catch((err) => {
+        setSErr("Failed to connect to auth server: " + err.message);
+      })
+      .finally(() => setSubmitting(false));
   };
 
   return (
@@ -110,8 +143,8 @@ function Login() {
               <p className="text-sm text-muted-foreground mt-1">Choose your role to continue.</p>
             </div>
 
-            <div className="grid grid-cols-2 p-1 rounded-xl bg-white/3 border border-white/8 mb-6">
-              {(["ADMIN", "PROFESSOR"] as Tab[]).map((t) => (
+            <div className="grid grid-cols-3 p-1 rounded-xl bg-white/3 border border-white/8 mb-6">
+              {(["ADMIN", "PROFESSOR", "STUDENT"] as Tab[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
@@ -122,13 +155,15 @@ function Login() {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {t === "ADMIN" ? <ShieldCheck className="h-4 w-4" /> : <GraduationCap className="h-4 w-4" />}
-                  {t === "ADMIN" ? "Admin Login" : "Professor Login"}
+                  {t === "ADMIN" && <ShieldCheck className="h-4 w-4" />}
+                  {t === "PROFESSOR" && <GraduationCap className="h-4 w-4" />}
+                  {t === "STUDENT" && <GraduationCap className="h-4 w-4 text-[oklch(0.72_0.16_195)]" />}
+                  {t === "ADMIN" ? "Admin" : t === "PROFESSOR" ? "Faculty" : "Student"}
                 </button>
               ))}
             </div>
 
-            {tab === "ADMIN" ? (
+            {tab === "ADMIN" && (
               <form onSubmit={onAdmin} className="space-y-4">
                 <Input label="Username" leading={<User className="h-4 w-4" />} value={aUser} onChange={(e) => setAUser(e.target.value)} placeholder="admin" required />
                 <Input label="Password" type="password" leading={<Lock className="h-4 w-4" />} value={aPass} onChange={(e) => setAPass(e.target.value)} placeholder="••••••" required />
@@ -136,13 +171,23 @@ function Login() {
                 <Button type="submit" className="w-full">Sign in as Admin</Button>
                 <p className="text-[11px] text-center text-muted-foreground">Demo credentials: admin / admin</p>
               </form>
-            ) : (
+            )}
+
+            {tab === "PROFESSOR" && (
               <form onSubmit={onProf} className="space-y-4">
-                <Input label="Email" type="email" leading={<Mail className="h-4 w-4" />} value={pEmail} onChange={(e) => setPEmail(e.target.value)} placeholder="amit.sharma@college.edu" required />
-                <Input label="Password" type="password" leading={<Lock className="h-4 w-4" />} value={pPass} onChange={(e) => setPPass(e.target.value)} placeholder="professor" required />
+                <Input label="Email" type="email" leading={<Mail className="h-4 w-4" />} value={pEmail} onChange={(e) => setPEmail(e.target.value)} placeholder="professor@college.edu" required />
+                <Input label="Password" type="password" leading={<Lock className="h-4 w-4" />} value={pPass} onChange={(e) => setPPass(e.target.value)} placeholder="••••••" required />
                 {pErr && <p className="text-xs text-[oklch(0.80_0.18_25)]">{pErr}</p>}
-                <Button type="submit" className="w-full">Sign in as Professor</Button>
-                <p className="text-[11px] text-center text-muted-foreground">Demo password: professor</p>
+                <Button type="submit" className="w-full" loading={submitting}>Sign in as Faculty</Button>
+              </form>
+            )}
+
+            {tab === "STUDENT" && (
+              <form onSubmit={onStudent} className="space-y-4">
+                <Input label="Email" type="email" leading={<Mail className="h-4 w-4" />} value={sEmail} onChange={(e) => setSEmail(e.target.value)} placeholder="student@college.edu" required />
+                <Input label="Password" type="password" leading={<Lock className="h-4 w-4" />} value={sPass} onChange={(e) => setSPass(e.target.value)} placeholder="••••••" required />
+                {sErr && <p className="text-xs text-[oklch(0.80_0.18_25)]">{sErr}</p>}
+                <Button type="submit" className="w-full" loading={submitting}>Sign in as Student</Button>
               </form>
             )}
           </div>

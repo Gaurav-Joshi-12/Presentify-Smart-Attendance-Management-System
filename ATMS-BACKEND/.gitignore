@@ -43,3 +43,11 @@ application.yaml
 application-*.properties
 application-*.yml
 application-*.yaml
+
+
+node_modules/
+dist/
+.vite/
+
+
+*.zip

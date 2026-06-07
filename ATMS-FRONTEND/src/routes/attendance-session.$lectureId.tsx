@@ -38,6 +38,7 @@ function AttendanceSession() {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("MANUAL");
   const [students, setStudents] = useState<StudentDto[]>([]);
+  const [existingAttendance, setExistingAttendance] = useState<AttendanceDto[]>([]);
   const [lecture, setLecture] = useState<any>(null);
   const [formattedTitle, setFormattedTitle] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -49,17 +50,40 @@ function AttendanceSession() {
     profService.getLectureById(lecId)
       .then((lectureData) => {
         setLecture(lectureData);
-        return profService.listClassStudents({
-          year: lectureData.year,
-          semester: lectureData.semester,
-          division: lectureData.division,
-          departmentId: lectureData.departmentId,
-        });
+        return Promise.all([
+          profService.listClassStudents({
+            year: lectureData.year,
+            semester: lectureData.semester,
+            division: lectureData.division,
+            departmentId: lectureData.departmentId,
+          }).catch(() => [] as StudentDto[]),
+          profService.attendanceByLecture(lecId).catch(() => [] as AttendanceDto[]),
+        ]);
       })
-      .then((data) => setStudents(data?.length ? data : MOCK_STUDENTS))
+      .then(([st, att]) => {
+        setStudents(st.length ? st : MOCK_STUDENTS);
+        setExistingAttendance(att);
+      })
       .catch(() => { setStudents(MOCK_STUDENTS); toast.message("Showing demo roster"); })
       .finally(() => setLoading(false));
   }, [role, professor, navigate, lecId]);
+
+  useEffect(() => {
+    if (!professor || !lecId) return;
+
+    const interval = setInterval(() => {
+      profService.attendanceByLecture(lecId)
+        .then((att) => {
+          setExistingAttendance((prev) => {
+            if (JSON.stringify(prev) === JSON.stringify(att)) return prev;
+            return att;
+          });
+        })
+        .catch((e) => console.error("Error polling live attendance:", e));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [lecId, professor]);
 
   useEffect(() => {
     if (!lecture) return;
@@ -114,11 +138,16 @@ function AttendanceSession() {
             {loading ? (
               <div className="py-12 flex items-center justify-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin"/>Loading roster…</div>
             ) : (
-              <ManualMarkingTable students={students} lectureId={lecId} />
+              <ManualMarkingTable students={students} lectureId={lecId} existingAttendance={existingAttendance} />
             )}
           </Card>
         ) : (
-          <QrGenerator lectureId={lecId} topic={formattedTitle || lecture?.topic || `Lecture #${lecId}`} />
+          <QrGenerator
+            lectureId={lecId}
+            topic={formattedTitle || lecture?.topic || `Lecture #${lecId}`}
+            students={students}
+            existingAttendance={existingAttendance}
+          />
         )}
       </main>
     </div>

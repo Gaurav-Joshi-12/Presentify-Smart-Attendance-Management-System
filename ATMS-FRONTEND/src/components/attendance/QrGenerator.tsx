@@ -2,38 +2,76 @@ import { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Radio, Timer, Users, Wifi } from "lucide-react";
 import { formatClock } from "@/utils/formatters";
+import type { AttendanceDto, StudentDto } from "@/types/dto";
 
-interface CheckIn { id: number; name: string; rollNo: string; time: string; }
-
-const MOCK_NAMES = [
-  ["Arjun", "Sharma", "STU-2026-0021"],
-  ["Priya", "Iyer", "STU-2026-0022"],
-  ["Rohit", "Verma", "STU-2026-0023"],
-  ["Neha", "Patil", "STU-2026-0024"],
-  ["Kabir", "Khan", "STU-2026-0025"],
-  ["Aditi", "Rao", "STU-2026-0026"],
-  ["Ishaan", "Mehta", "STU-2026-0027"],
-];
+interface CheckIn {
+  id: number;
+  name: string;
+  rollNo: string;
+  time: string;
+  status: string;
+}
 
 export default function QrGenerator({
   lectureId,
   topic,
   durationSec = 600,
-}: { lectureId: number; topic?: string; durationSec?: number }) {
+  students = [],
+  existingAttendance = [],
+}: {
+  lectureId: number;
+  topic?: string;
+  durationSec?: number;
+  students?: StudentDto[];
+  existingAttendance?: AttendanceDto[];
+}) {
   const [remaining, setRemaining] = useState(durationSec);
-  const [feed, setFeed] = useState<CheckIn[]>([]);
   const [seed, setSeed] = useState(0);
 
   const payload = useMemo(
     () =>
       JSON.stringify({
         lectureId,
-        ts: Date.now(),
-        token: Math.random().toString(36).slice(2, 10),
-        seed,
       }),
-    [lectureId, seed]
+    [lectureId]
   );
+
+  // Parse existing attendance and match with student details to compute the feed
+  const feed = useMemo(() => {
+    return (existingAttendance || [])
+      .filter((att) => att.remarks?.startsWith("Attendance Marked with QR"))
+      .map((att) => {
+        const student = students.find((s) => s.studentId === att.studentId);
+        let timeStr = "--:--";
+        if (att.markedAt) {
+          try {
+            // Spring Boot LocalDateTime might return microsecond precision (e.g. .416631)
+            // which can be unsupported or fail to parse in older browsers.
+            // Sanitize by keeping only 3 fractional digits (milliseconds).
+            let sanitized = att.markedAt;
+            if (sanitized.includes(".")) {
+              const [main, frac] = sanitized.split(".");
+              sanitized = `${main}.${frac.slice(0, 3)}`;
+            }
+            const date = new Date(sanitized);
+            if (!isNaN(date.getTime())) {
+              timeStr = formatClock(date);
+            }
+          } catch (e) {
+            console.error("Error parsing markedAt:", e);
+          }
+        }
+        return {
+          id: att.studentId!,
+          name: student ? `${student.firstName} ${student.lastName}` : `Student #${att.studentId}`,
+          rollNo: student ? student.rollNo : "STU-UNKNOWN",
+          time: timeStr,
+          status: att.attendanceStatus,
+          rawTime: att.markedAt ? new Date(att.markedAt).getTime() : 0,
+        };
+      })
+      .sort((a, b) => b.rawTime - a.rawTime);
+  }, [existingAttendance, students]);
 
   // Countdown
   useEffect(() => {
@@ -44,20 +82,6 @@ export default function QrGenerator({
   // Rotating token every 15s (security mock)
   useEffect(() => {
     const t = setInterval(() => setSeed((s) => s + 1), 15000);
-    return () => clearInterval(t);
-  }, []);
-
-  // Mock check-ins
-  useEffect(() => {
-    let i = 0;
-    const t = setInterval(() => {
-      if (i >= MOCK_NAMES.length) return clearInterval(t);
-      const [f, l, r] = MOCK_NAMES[i++];
-      setFeed((prev) => [
-        { id: Date.now(), name: `${f} ${l}`, rollNo: r, time: formatClock(new Date()) },
-        ...prev,
-      ]);
-    }, 2200);
     return () => clearInterval(t);
   }, []);
 
@@ -115,7 +139,13 @@ export default function QrGenerator({
               </div>
               <div className="text-right">
                 <div className="text-[11px] text-muted-foreground">{c.time}</div>
-                <div className="text-[11px] font-semibold text-[oklch(0.88_0.14_155)]">PRESENT</div>
+                <div className={
+                  c.status === "PRESENT"
+                    ? "text-[11px] font-semibold text-[oklch(0.88_0.14_155)]"
+                    : "text-[11px] font-semibold text-[oklch(0.65_0.24_25)]"
+                }>
+                  {c.status}
+                </div>
               </div>
             </div>
           ))}

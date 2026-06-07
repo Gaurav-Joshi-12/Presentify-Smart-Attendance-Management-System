@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SubjectsRouteImport } from './routes/subjects'
+import { Route as StudentScanRouteImport } from './routes/student-scan'
+import { Route as StudentDashboardRouteImport } from './routes/student-dashboard'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as QrcodeGeneratorRouteImport } from './routes/qrcode-generator'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminDashboardRouteImport } from './routes/admin-dashboard'
 import { Route as IndexRouteImport } from './routes/index'
@@ -21,9 +24,24 @@ const SubjectsRoute = SubjectsRouteImport.update({
   path: '/subjects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentScanRoute = StudentScanRouteImport.update({
+  id: '/student-scan',
+  path: '/student-scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentDashboardRoute = StudentDashboardRouteImport.update({
+  id: '/student-dashboard',
+  path: '/student-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportsRoute = ReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QrcodeGeneratorRoute = QrcodeGeneratorRouteImport.update({
+  id: '/qrcode-generator',
+  path: '/qrcode-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -52,7 +70,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin-dashboard': typeof AdminDashboardRoute
   '/login': typeof LoginRoute
+  '/qrcode-generator': typeof QrcodeGeneratorRoute
   '/reports': typeof ReportsRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/student-scan': typeof StudentScanRoute
   '/subjects': typeof SubjectsRoute
   '/attendance-session/$lectureId': typeof AttendanceSessionLectureIdRoute
 }
@@ -60,7 +81,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin-dashboard': typeof AdminDashboardRoute
   '/login': typeof LoginRoute
+  '/qrcode-generator': typeof QrcodeGeneratorRoute
   '/reports': typeof ReportsRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/student-scan': typeof StudentScanRoute
   '/subjects': typeof SubjectsRoute
   '/attendance-session/$lectureId': typeof AttendanceSessionLectureIdRoute
 }
@@ -69,7 +93,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin-dashboard': typeof AdminDashboardRoute
   '/login': typeof LoginRoute
+  '/qrcode-generator': typeof QrcodeGeneratorRoute
   '/reports': typeof ReportsRoute
+  '/student-dashboard': typeof StudentDashboardRoute
+  '/student-scan': typeof StudentScanRoute
   '/subjects': typeof SubjectsRoute
   '/attendance-session/$lectureId': typeof AttendanceSessionLectureIdRoute
 }
@@ -79,7 +106,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admin-dashboard'
     | '/login'
+    | '/qrcode-generator'
     | '/reports'
+    | '/student-dashboard'
+    | '/student-scan'
     | '/subjects'
     | '/attendance-session/$lectureId'
   fileRoutesByTo: FileRoutesByTo
@@ -87,7 +117,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admin-dashboard'
     | '/login'
+    | '/qrcode-generator'
     | '/reports'
+    | '/student-dashboard'
+    | '/student-scan'
     | '/subjects'
     | '/attendance-session/$lectureId'
   id:
@@ -95,7 +128,10 @@ export interface FileRouteTypes {
     | '/'
     | '/admin-dashboard'
     | '/login'
+    | '/qrcode-generator'
     | '/reports'
+    | '/student-dashboard'
+    | '/student-scan'
     | '/subjects'
     | '/attendance-session/$lectureId'
   fileRoutesById: FileRoutesById
@@ -104,7 +140,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   LoginRoute: typeof LoginRoute
+  QrcodeGeneratorRoute: typeof QrcodeGeneratorRoute
   ReportsRoute: typeof ReportsRoute
+  StudentDashboardRoute: typeof StudentDashboardRoute
+  StudentScanRoute: typeof StudentScanRoute
   SubjectsRoute: typeof SubjectsRoute
   AttendanceSessionLectureIdRoute: typeof AttendanceSessionLectureIdRoute
 }
@@ -118,11 +157,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student-scan': {
+      id: '/student-scan'
+      path: '/student-scan'
+      fullPath: '/student-scan'
+      preLoaderRoute: typeof StudentScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student-dashboard': {
+      id: '/student-dashboard'
+      path: '/student-dashboard'
+      fullPath: '/student-dashboard'
+      preLoaderRoute: typeof StudentDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reports': {
       id: '/reports'
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qrcode-generator': {
+      id: '/qrcode-generator'
+      path: '/qrcode-generator'
+      fullPath: '/qrcode-generator'
+      preLoaderRoute: typeof QrcodeGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -160,7 +220,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   LoginRoute: LoginRoute,
+  QrcodeGeneratorRoute: QrcodeGeneratorRoute,
   ReportsRoute: ReportsRoute,
+  StudentDashboardRoute: StudentDashboardRoute,
+  StudentScanRoute: StudentScanRoute,
   SubjectsRoute: SubjectsRoute,
   AttendanceSessionLectureIdRoute: AttendanceSessionLectureIdRoute,
 }

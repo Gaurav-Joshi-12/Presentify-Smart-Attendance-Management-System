@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student,Long> {
     public List<Student> findByActiveTrue();
     public Optional<Student> findByStudentIdAndActiveTrue(Long id);
+    public Optional<Student> findByEmailAndActiveTrue(String email);
     List<Student>
     findByYearAndSemesterAndDivisionAndDepartmentAndActiveTrue(
             Integer year,
